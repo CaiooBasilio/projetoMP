@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Adicionar Categoria</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --verde-escuro: #0a3d1f;
+      --verde-medio: #1a6b3a;
+      --verde-claro: #2eb85c;
+      --verde-neon: #39ff8a;
+      --branco: #e8f5ec;
+      --branco-suave: #c5dece;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #051a0c 0%, #0d3320 30%, #1a6b3a 65%, #2eb85c 100%);
+      font-family: 'Exo 2', sans-serif;
+      color: var(--branco);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .voltar {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--branco-suave);
+      text-decoration: none;
+      font-size: 0.88rem;
+      letter-spacing: 1px;
+      margin-bottom: 24px;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .voltar:hover { opacity: 1; }
+
+    .card {
+      background: rgba(10, 40, 20, 0.6);
+      border: 1px solid rgba(57,255,138,0.2);
+      border-radius: 14px;
+      backdrop-filter: blur(12px);
+      padding: 36px 32px;
+      animation: fadeUp 0.5s ease;
+    }
+
+    .card-titulo {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--verde-neon);
+      text-shadow: 0 0 14px rgba(57,255,138,0.3);
+      margin-bottom: 6px;
+    }
+
+    .card-subtitulo {
+      font-size: 0.82rem;
+      color: var(--branco-suave);
+      opacity: 0.6;
+      letter-spacing: 1px;
+      margin-bottom: 30px;
+    }
+
+    .campo {
+      margin-bottom: 20px;
+    }
+
+    .campo label {
+      display: block;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--verde-neon);
+      opacity: 0.8;
+      margin-bottom: 8px;
+      font-family: 'Rajdhani', sans-serif;
+    }
+
+    .campo input {
+      width: 100%;
+      padding: 13px 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(57,255,138,0.25);
+      border-radius: 7px;
+      color: var(--branco);
+      font-family: 'Exo 2', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.3s, background 0.3s;
+    }
+
+    .campo input::placeholder { color: rgba(200,240,215,0.3); }
+    .campo input:focus {
+      border-color: var(--verde-neon);
+      background: rgba(255,255,255,0.09);
+    }
+
+    .btn-submit {
+      width: 100%;
+      margin-top: 10px;
+      padding: 15px;
+      background: var(--verde-claro);
+      border: none;
+      border-radius: 8px;
+      color: #051a0c;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    }
+
+    .btn-submit:hover {
+      background: var(--verde-neon);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(57,255,138,0.3);
+    }
+
+    .btn-submit:active { transform: scale(0.98); }
+
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .msg {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 7px;
+      font-size: 0.9rem;
+      display: none;
+      animation: fadeUp 0.3s ease;
+    }
+
+    .msg.sucesso {
+      background: rgba(57,255,138,0.1);
+      border: 1px solid rgba(57,255,138,0.3);
+      color: var(--verde-neon);
+      display: block;
+    }
+
+    .msg.erro {
+      background: rgba(255,107,107,0.1);
+      border: 1px solid rgba(255,107,107,0.3);
+      color: #ff9999;
+      display: block;
+    }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  </style>
+</head>
+<body>
+<div class="container">
+  <a href="index.html" class="voltar">← Voltar para lista</a>
+
+  <div class="card">
+    <div class="card-titulo">+ Adicionar</div>
+    <div class="card-subtitulo">Nova categoria no almoxarifado</div>
+
+    <div class="campo">
+      <label>Nome da Categoria</label>
+      <input type="text" id="nome" placeholder="Ex: Parafusos M8"/>
+    </div>
+
+    <div class="campo">
+      <label>Local</label>
+      <input type="text" id="local" placeholder="Ex: Prateleira A3"/>
+    </div>
+
+    <div class="campo">
+      <label>Linha</label>
+      <input type="number" id="linha" placeholder="Ex: 2"/>
+    </div>
+
+    <button class="btn-submit" id="btnAdicionar">Adicionar Categoria</button>
+
+    <div class="msg" id="msg"></div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:8080/categoria';
+
+  document.getElementById('btnAdicionar').addEventListener('click', async () => {
+    const nome  = document.getElementById('nome').value.trim();
+    const local = document.getElementById('local').value.trim();
+    const linha = document.getElementById('linha').value;
+    const msg   = document.getElementById('msg');
+    const btn   = document.getElementById('btnAdicionar');
+
+    msg.className = 'msg';
+    msg.textContent = '';
+
+    if (!nome || !local) {
+      msg.textContent = 'Nome e Local são obrigatórios.';
+      msg.className = 'msg erro';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'SALVANDO...';
+
+    try {
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nomeCategoria: nome, local, linha: linha ? parseInt(linha) : null })
+      });
+
+      if (res.status === 201) {
+        msg.textContent = '✔ Categoria adicionada com sucesso!';
+        msg.className = 'msg sucesso';
+        document.getElementById('nome').value = '';
+        document.getElementById('local').value = '';
+        document.getElementById('linha').value = '';
+      } else if (res.status === 409) {
+        const erro = await res.json();
+        msg.textContent = '✖ ' + erro.mensagem;
+        msg.className = 'msg erro';
+      } else {
+        msg.textContent = '✖ Erro inesperado. Tente novamente.';
+        msg.className = 'msg erro';
+      }
+    } catch {
+      msg.textContent = '✖ Não foi possível conectar ao servidor.';
+      msg.className = 'msg erro';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'ADICIONAR CATEGORIA';
+  });
+</script>
+</body>
+</html>

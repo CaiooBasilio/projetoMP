@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Almoxarifado - Categorias</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --verde-escuro: #0a3d1f;
+      --verde-medio: #1a6b3a;
+      --verde-claro: #2eb85c;
+      --verde-neon: #39ff8a;
+      --cinza-escuro: #0d1f14;
+      --branco: #e8f5ec;
+      --branco-suave: #c5dece;
+      --sombra: rgba(0,0,0,0.35);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #051a0c 0%, #0d3320 30%, #1a6b3a 65%, #2eb85c 100%);
+      font-family: 'Exo 2', sans-serif;
+      color: var(--branco);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    /* Efeito de textura no fundo */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 750px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+      animation: fadeDown 0.6s ease;
+    }
+
+    header h1 {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--verde-neon);
+      text-shadow: 0 0 18px rgba(57,255,138,0.4);
+    }
+
+    header p {
+      font-size: 0.9rem;
+      color: var(--branco-suave);
+      letter-spacing: 2px;
+      margin-top: 6px;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+
+    /* Barra de busca */
+    .search-bar {
+      display: flex;
+      gap: 0;
+      margin-bottom: 28px;
+      animation: fadeUp 0.6s ease 0.1s both;
+    }
+
+    .search-bar input {
+      flex: 1;
+      padding: 14px 20px;
+      background: rgba(255,255,255,0.07);
+      border: 2px solid rgba(57,255,138,0.3);
+      border-right: none;
+      border-radius: 8px 0 0 8px;
+      color: var(--branco);
+      font-family: 'Exo 2', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.3s, background 0.3s;
+      backdrop-filter: blur(6px);
+    }
+
+    .search-bar input::placeholder { color: rgba(200,240,215,0.4); }
+
+    .search-bar input:focus {
+      border-color: var(--verde-neon);
+      background: rgba(255,255,255,0.11);
+    }
+
+    .search-bar button {
+      padding: 14px 26px;
+      background: var(--verde-claro);
+      border: 2px solid var(--verde-claro);
+      border-radius: 0 8px 8px 0;
+      color: #051a0c;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .search-bar button:hover { background: var(--verde-neon); transform: scale(1.03); }
+    .search-bar button:active { transform: scale(0.98); }
+
+    /* Lista de categorias */
+    .card-lista {
+      background: rgba(10, 40, 20, 0.55);
+      border: 1px solid rgba(57,255,138,0.2);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+      animation: fadeUp 0.6s ease 0.2s both;
+      min-height: 200px;
+    }
+
+    .card-lista-header {
+      padding: 14px 22px;
+      background: rgba(57,255,138,0.08);
+      border-bottom: 1px solid rgba(57,255,138,0.15);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--verde-neon);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #contador {
+      background: var(--verde-claro);
+      color: #051a0c;
+      border-radius: 20px;
+      padding: 2px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    #lista-categorias {
+      list-style: none;
+      max-height: 420px;
+      overflow-y: auto;
+    }
+
+    #lista-categorias::-webkit-scrollbar { width: 6px; }
+    #lista-categorias::-webkit-scrollbar-track { background: transparent; }
+    #lista-categorias::-webkit-scrollbar-thumb { background: rgba(57,255,138,0.3); border-radius: 3px; }
+
+    #lista-categorias li {
+      display: grid;
+      grid-template-columns: 2fr 1.5fr 0.8fr;
+      gap: 12px;
+      padding: 14px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: background 0.2s;
+      align-items: center;
+      animation: slideIn 0.3s ease;
+    }
+
+    #lista-categorias li:last-child { border-bottom: none; }
+    #lista-categorias li:hover { background: rgba(57,255,138,0.06); }
+
+    .cat-nome {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--branco);
+    }
+
+    .cat-local {
+      font-size: 0.88rem;
+      color: var(--branco-suave);
+      opacity: 0.8;
+    }
+
+    .cat-linha {
+      text-align: center;
+      background: rgba(57,255,138,0.12);
+      border: 1px solid rgba(57,255,138,0.25);
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 0.82rem;
+      color: var(--verde-neon);
+      font-family: 'Rajdhani', sans-serif;
+      letter-spacing: 1px;
+    }
+
+    .lista-vazia {
+      text-align: center;
+      padding: 50px 20px;
+      color: var(--branco-suave);
+      opacity: 0.5;
+      font-size: 0.95rem;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--verde-neon);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 2px;
+      animation: pulse 1s infinite;
+    }
+
+    /* Botões de navegação */
+    .nav-botoes {
+      display: flex;
+      gap: 14px;
+      margin-top: 28px;
+      animation: fadeUp 0.6s ease 0.3s both;
+      flex-wrap: wrap;
+    }
+
+    .nav-botoes a {
+      flex: 1;
+      min-width: 140px;
+      text-decoration: none;
+      text-align: center;
+      padding: 14px 20px;
+      border-radius: 8px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      transition: transform 0.15s, box-shadow 0.2s;
+    }
+
+    .btn-add {
+      background: var(--verde-claro);
+      color: #051a0c;
+      border: 2px solid var(--verde-claro);
+    }
+
+    .btn-add:hover {
+      background: var(--verde-neon);
+      border-color: var(--verde-neon);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(57,255,138,0.3);
+    }
+
+    .btn-update {
+      background: transparent;
+      color: var(--verde-claro);
+      border: 2px solid var(--verde-claro);
+    }
+
+    .btn-update:hover {
+      background: rgba(46,184,92,0.12);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(46,184,92,0.2);
+    }
+
+    .btn-delete {
+      background: transparent;
+      color: #ff6b6b;
+      border: 2px solid #ff6b6b;
+    }
+
+    .btn-delete:hover {
+      background: rgba(255,107,107,0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255,107,107,0.2);
+    }
+
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeUp   { from { opacity:0; transform:translateY(20px);  } to { opacity:1; transform:translateY(0); } }
+    @keyframes slideIn  { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes pulse    { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>⚙ Almoxarifado</h1>
+    <p>MP Metalúrgica — Gestão de Categorias</p>
+  </header>
+
+  <div class="search-bar">
+    <input type="text" id="campoBusca" placeholder="Procurar categoria..." />
+    <button id="btnBusca">OK</button>
+  </div>
+
+  <div class="card-lista">
+    <div class="card-lista-header">
+      <span>Categorias</span>
+      <span id="contador">0</span>
+    </div>
+    <ul id="lista-categorias">
+      <li class="loading" style="grid-column:1/-1; display:block;">CARREGANDO...</li>
+    </ul>
+  </div>
+
+  <div class="nav-botoes">
+    <a href="adicionar.html" class="btn-add">+ Adicionar</a>
+    <a href="atualizar.html" class="btn-update">✎ Atualizar</a>
+    <a href="deletar.html"   class="btn-delete">✕ Deletar</a>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:8080/categoria';
+  let todasCategorias = [];
+
+  async function carregarCategorias() {
+    try {
+      const res = await fetch(API);
+      if (!res.ok) throw new Error();
+      todasCategorias = await res.json();
+      renderizar(todasCategorias);
+    } catch {
+      document.getElementById('lista-categorias').innerHTML =
+        '<li class="lista-vazia" style="display:block;">Não foi possível conectar ao servidor.</li>';
+    }
+  }
+
+  function renderizar(lista) {
+    const ul = document.getElementById('lista-categorias');
+    document.getElementById('contador').textContent = lista.length;
+    if (lista.length === 0) {
+      ul.innerHTML = '<li class="lista-vazia" style="display:block;">Nenhuma categoria encontrada.</li>';
+      return;
+    }
+    ul.innerHTML = lista.map(c => `
+      <li>
+        <span class="cat-nome">${c.nomeCategoria}</span>
+        <span class="cat-local">📍 ${c.local}</span>
+        <span class="cat-linha">Linha ${c.linha ?? '-'}</span>
+      </li>
+    `).join('');
+  }
+
+  function buscar() {
+    const termo = document.getElementById('campoBusca').value.trim().toLowerCase();
+    if (!termo) { renderizar(todasCategorias); return; }
+    const resultado = todasCategorias.filter(c =>
+      c.nomeCategoria.toLowerCase().includes(termo)
+    );
+    if (resultado.length === 0) {
+      alert('Não foi possível achar a categoria desejada.');
+      renderizar(todasCategorias);
+      document.getElementById('campoBusca').value = '';
+    } else {
+      renderizar(resultado);
+    }
+  }
+
+  document.getElementById('btnBusca').addEventListener('click', buscar);
+  document.getElementById('campoBusca').addEventListener('keydown', e => {
+    if (e.key === 'Enter') buscar();
+  });
+
+  carregarCategorias();
+</script>
+</body>
+</html>

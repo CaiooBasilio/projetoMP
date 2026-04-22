@@ -1,0 +1,48 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f7f5;
+    margin: 0;
+}
+
+header {
+    background-color: #8fd19e;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+}
+
+header a {
+    text-decoration: none;
+    color: #1e3d2f;
+    margin: 0 10px;
+    font-weight: bold;
+}
+
+.container {
+    padding: 20px;
+}
+
+button {
+    background-color: #8fd19e;
+    border: none;
+    padding: 10px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+button.delete {
+    background-color: #e57373;
+    color: white;
+}
+
+button.update {
+    background-color: #64b5f6;
+    color: white;
+}
+
+.card {
+    background: white;
+    padding: 15px;
+    margin: 10px 0;
+    border-left: 5px solid #8fd19e;
+}

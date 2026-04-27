@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Itens do Estoque — MP Metalúrgica</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header>
+  <a href="itens.html" class="header-logo">
+    <div class="header-logo-icon">MP</div>
+    <span class="header-logo-text">Almoxarifado</span>
+  </a>
+  <nav>
+    <a href="itens.html" class="active"><span>📦 </span>Itens</a>
+    <a href="categorias.html"><span>🗂 </span>Categorias</a>
+    <a href="funcionarios.html"><span>👷 </span>Funcionários</a>
+  </nav>
+</header>
+
+<main>
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Itens do Estoque</h1>
+      <p class="page-subtitle">GET /item &nbsp;|&nbsp; Almoxarifado MP Metalúrgica</p>
+    </div>
+    <button class="btn btn-primary" onclick="abrirModalNovo()">+ Novo Item</button>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="inputBusca" placeholder="Buscar item pelo nome..." />
+    <button class="btn btn-azul" onclick="buscarItem()">Buscar</button>
+    <button class="btn btn-outline" onclick="carregarItens()">Limpar</button>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nome do Item</th>
+          <th>Descrição</th>
+          <th>Categoria</th>
+          <th>Quantidade</th>
+          <th>Concerto</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaItens">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <div class="empty-state-icon">📦</div>
+              <div class="empty-state-text">Carregando itens...</div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<!-- MODAL: Novo Item -->
+<div class="modal-overlay" id="modalNovo">
+  <div class="modal">
+    <div class="modal-titulo">Adicionar Novo Item</div>
+    <div class="form-group">
+      <label>Nome do Item</label>
+      <input type="text" id="novoNome" placeholder="Ex: Parafuso M8" />
+    </div>
+    <div class="form-group">
+      <label>Descrição</label>
+      <input type="text" id="novaDescricao" placeholder="Ex: Parafuso sextavado galvanizado" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Categoria</label>
+        <select id="novaCategoria">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Quantidade</label>
+        <input type="number" id="novaQuantidade" min="0" placeholder="0" />
+      </div>
+    </div>
+    <div class="form-group" style="display:flex; align-items:center; gap:0.5rem;">
+      <input type="checkbox" id="novoConcerto" style="width:16px; height:16px;" />
+      <label style="margin:0; text-transform:none; font-size:0.85rem;">Item em concerto?</label>
+    </div>
+    <div class="modal-acoes">
+      <button class="btn btn-outline" onclick="fecharModal('modalNovo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarNovoItem()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Editar Item -->
+<div class="modal-overlay" id="modalEditar">
+  <div class="modal">
+    <div class="modal-titulo">Editar Item</div>
+    <!-- campos hidden para guardar os dados que não mudam -->
+    <input type="hidden" id="editarId" />
+    <input type="hidden" id="editarDescricao" />
+    <!-- <input type="hidden" id="editarQuantidade" /> -->
+    <input type="hidden" id="editarCategoriaJson" />
+    <div class="form-group">
+      <label>Nome do Item</label>
+      <input type="text" id="editarNome" placeholder="Nome do item" />
+      <label>Quantidade do Item</label>
+      <input type="text" id="editarQuantidade" placeholder="Quantidade Atual">
+    </div>
+    <div class="form-group" style="display:flex; align-items:center; gap:0.5rem;">
+      <input type="checkbox" id="editarConcerto" style="width:16px; height:16px;" />
+      <label style="margin:0; text-transform:none; font-size:0.85rem;">Item em concerto?</label>
+    </div>
+    <div class="modal-acoes">
+      <button class="btn btn-outline" onclick="fecharModal('modalEditar')">Cancelar</button>
+      <button class="btn btn-azul" onclick="salvarEdicao()">Atualizar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Retirar Quantidade -->
+<div class="modal-overlay" id="modalRetirar">
+  <div class="modal">
+    <div class="modal-titulo">Retirar Quantidade</div>
+    <p class="text-muted mb-2">Item: <strong id="retirarNomeDisplay"></strong></p>
+    <div class="form-group">
+      <label>Quantidade a Retirar</label>
+      <input type="number" id="retirarQtd" min="1" placeholder="0" />
+      <input type="hidden" id="retirarId" />
+    </div>
+    <div class="modal-acoes">
+      <button class="btn btn-outline" onclick="fecharModal('modalRetirar')">Cancelar</button>
+      <button class="btn btn-azul" onclick="salvarRetirada()">Confirmar Retirada</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar Exclusão -->
+<div class="modal-overlay" id="modalExcluir">
+  <div class="modal">
+    <div class="modal-titulo" style="border-top-color: var(--vermelho);">Confirmar Exclusão</div>
+    <p style="font-size:0.88rem; color:var(--texto-leve); margin-bottom:0.5rem;">
+      Deseja realmente excluir o item:
+    </p>
+    <p style="font-weight:600; font-size:0.95rem;" id="excluirNomeDisplay"></p>
+    <input type="hidden" id="excluirId" />
+    <div class="modal-acoes">
+      <button class="btn btn-outline" onclick="fecharModal('modalExcluir')">Cancelar</button>
+      <button class="btn btn-vermelho" onclick="confirmarExclusao()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  const API = 'http://localhost:8080';
+
+  // ========== CARREGAR ==========
+  async function carregarItens() {
+    document.getElementById('inputBusca').value = '';
+    try {
+      const res = await fetch(`${API}/item`);
+      const itens = await res.json();
+      renderizarTabela(itens);
+    } catch {
+      mostrarToast('Erro ao conectar com a API', 'erro');
+    }
+  }
+
+  async function buscarItem() {
+    const nome = document.getElementById('inputBusca').value.trim();
+    if (!nome) return carregarItens();
+    try {
+      const res = await fetch(`${API}/item/buscar?nome=${encodeURIComponent(nome)}`);
+      if (res.ok) {
+        const itens = await res.json();
+        renderizarTabela(itens);
+      } else {
+        renderizarTabela([]);
+        mostrarToast('Nenhum item encontrado', 'info');
+      }
+    } catch {
+      mostrarToast('Erro ao buscar item', 'erro');
+    }
+  }
+
+  function renderizarTabela(itens) {
+    const tbody = document.getElementById('tabelaItens');
+    if (!itens.length) {
+      tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <div class="empty-state-text">Nenhum item encontrado</div>
+      </div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = itens.map(i => `
+      <tr>
+        <td class="text-mono" style="color:var(--texto-leve)">${i.id}</td>
+        <td style="font-weight:500">${i.nomeDoItem}</td>
+        <td class="text-muted">${i.descricaoItem}</td>
+        <td><span class="badge badge-verde">${i.categoriaItem?.nomeCategoria ?? '—'}</span></td>
+        <td><span class="badge ${i.quantidade <= 5 ? 'badge-vermelho' : 'badge-azul'}">${i.quantidade}</span></td>
+        <td>${i.concerto ? '<span class="badge badge-vermelho">Sim</span>' : '<span class="badge badge-verde">Não</span>'}</td>
+        <td>
+          <div class="td-actions">
+            <button class="btn btn-sm btn-azul" onclick="abrirModalEditar(${i.id}, '${escapar(i.nomeDoItem)}', ${i.concerto}, '${escapar(i.descricaoItem)}', ${i.quantidade}, '${escapar(JSON.stringify(i.categoriaItem))}')">Editar</button>
+            <button class="btn btn-sm btn-outline" onclick="abrirModalRetirar(${i.id}, '${escapar(i.nomeDoItem)}')">Retirar</button>
+            <button class="btn btn-sm btn-vermelho" onclick="abrirModalExcluir('${escapar(i.nomeDoItem)}', ${i.id})">Excluir</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ========== NOVO ITEM ==========
+  async function abrirModalNovo() {
+    await carregarCategoriasSelect();
+    abrirModal('modalNovo');
+  }
+
+  async function carregarCategoriasSelect() {
+    try {
+      const res = await fetch(`${API}/categoria`);
+      const cats = await res.json();
+      const sel = document.getElementById('novaCategoria');
+      sel.innerHTML = '<option value="">Selecione...</option>' +
+        cats.map(c => `<option value='${JSON.stringify(c)}'>${c.nomeCategoria}</option>`).join('');
+    } catch {}
+  }
+
+  async function salvarNovoItem() {
+    const nome   = document.getElementById('novoNome').value.trim();
+    const desc   = document.getElementById('novaDescricao').value.trim();
+    const catVal = document.getElementById('novaCategoria').value;
+    const qtd    = parseInt(document.getElementById('novaQuantidade').value) || 0;
+    const conc   = document.getElementById('novoConcerto').checked;
+
+    if (!nome || !desc || !catVal) {
+      mostrarToast('Preencha todos os campos obrigatórios', 'erro');
+      return;
+    }
+    const cat = JSON.parse(catVal);
+    const body = { nomeDoItem: nome, descricaoItem: desc, categoriaItem: cat, quantidade: qtd, concerto: conc };
+    try {
+      const res = await fetch(`${API}/item`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (res.ok) {
+        fecharModal('modalNovo');
+        mostrarToast('Item adicionado com sucesso', 'sucesso');
+        carregarItens();
+      } else {
+        mostrarToast('Erro ao salvar item', 'erro');
+      }
+    } catch {
+      mostrarToast('Erro na requisição', 'erro');
+    }
+  }
+
+  // ========== EDITAR ==========
+  function abrirModalEditar(id, nome, concerto, descricao, quantidade, categoriaJson) {
+    document.getElementById('editarId').value = id;
+    document.getElementById('editarNome').value = nome;
+    document.getElementById('editarConcerto').checked = concerto;
+    // guarda os campos que não aparecem no modal mas precisam ser reenviados
+    document.getElementById('editarDescricao').value = descricao;
+    document.getElementById('editarQuantidade').value = quantidade;
+    document.getElementById('editarCategoriaJson').value = categoriaJson;
+    abrirModal('modalEditar');
+  }
+
+  async function salvarEdicao() {
+    const id       = document.getElementById('editarId').value;
+    const nome     = document.getElementById('editarNome').value.trim();
+    const concerto = document.getElementById('editarConcerto').checked;
+    const descricao  = document.getElementById('editarDescricao').value;
+    const quantidade = parseInt(document.getElementById('editarQuantidade').value);
+    const categoria  = JSON.parse(document.getElementById('editarCategoriaJson').value);
+
+    if (!nome) return mostrarToast('Nome não pode ser vazio', 'erro');
+
+    // monta o objeto completo que o controller espera
+    const body = {
+      id: parseInt(id),
+      nomeDoItem: nome,
+      descricaoItem: descricao,
+      categoriaItem: categoria,
+      quantidade: quantidade,
+      concerto: concerto
+    };
+
+    try {
+      const res = await fetch(`${API}/item/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (res.ok) {
+        fecharModal('modalEditar');
+        mostrarToast('Item atualizado com sucesso', 'sucesso');
+        carregarItens();
+      } else {
+        mostrarToast('Erro ao atualizar item', 'erro');
+      }
+    } catch {
+      mostrarToast('Erro na requisição', 'erro');
+    }
+  }
+
+  // ========== RETIRAR QUANTIDADE ==========
+  function abrirModalRetirar(id, nome) {
+    document.getElementById('retirarId').value = id;
+    document.getElementById('retirarNomeDisplay').textContent = nome;
+    document.getElementById('retirarQtd').value = '';
+    abrirModal('modalRetirar');
+  }
+
+  async function salvarRetirada() {
+    const id  = document.getElementById('retirarId').value;
+    const qtd = parseInt(document.getElementById('retirarQtd').value);
+    if (!qtd || qtd < 0) return mostrarToast('Informe uma quantidade válida', 'erro');
+    try {
+      const res = await fetch(`${API}/item/${id}/quantidade`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(qtd)
+      });
+      if (res.ok) {
+        fecharModal('modalRetirar');
+        mostrarToast('Retirada registrada', 'sucesso');
+        carregarItens();
+      } else mostrarToast('Erro ao registrar retirada', 'erro');
+    } catch {
+      mostrarToast('Erro na requisição', 'erro');
+    }
+  }
+
+  // ========== EXCLUIR ==========
+  function abrirModalExcluir(nome, id) {
+    document.getElementById('excluirId').value = id;
+    document.getElementById('excluirNomeDisplay').textContent = nome;
+    abrirModal('modalExcluir');
+  }
+
+  async function confirmarExclusao() {
+    const id = document.getElementById('excluirId').value;
+    try {
+      const res = await fetch(`${API}/item/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (res.status === 204) {
+        fecharModal('modalExcluir');
+        mostrarToast('Item excluído', 'sucesso');
+        carregarItens();
+      } else mostrarToast('Item não encontrado', 'erro');
+    } catch {
+      mostrarToast('Erro na requisição', 'erro');
+    }
+  }
+
+  // ========== UTILITÁRIOS ==========
+  function abrirModal(id) { document.getElementById(id).classList.add('open'); }
+  function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
+  function escapar(str) { return (str ?? '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+
+  function mostrarToast(msg, tipo = 'info') {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast toast-${tipo}`;
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+  }
+
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+  });
+
+  window.addEventListener('load', carregarItens);
+</script>
+</body>
+</html>

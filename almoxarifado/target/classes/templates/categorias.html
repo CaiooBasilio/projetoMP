@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Categorias — MP Metalúrgica</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header>
+  <a href="itens.html" class="header-logo">
+    <div class="header-logo-icon">MP</div>
+    <span class="header-logo-text">Almoxarifado</span>
+  </a>
+  <nav>
+    <a href="itens.html"><span>📦 </span>Itens</a>
+    <a href="categorias.html" class="active"><span>🗂 </span>Categorias</a>
+    <a href="funcionarios.html"><span>👷 </span>Funcionários</a>
+  </nav>
+</header>
+
+<main>
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Categorias</h1>
+      <p class="page-subtitle">GET /categoria &nbsp;|&nbsp; Almoxarifado MP Metalúrgica</p>
+    </div>
+    <button class="btn btn-primary" onclick="abrirModalNova()">+ Nova Categoria</button>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="inputBusca" placeholder="Buscar categoria pelo nome..." />
+    <button class="btn btn-azul" onclick="buscarCategoria()">Buscar</button>
+    <button class="btn btn-outline" onclick="carregarCategorias()">Limpar</button>
+  </div>
+
+  <div class="card-grid" id="gridCategorias">
+    <div style="grid-column:1/-1">
+      <div class="empty-state">
+        <div class="empty-state-icon">🗂</div>
+        <div class="empty-state-text">Carregando categorias...</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL: Nova Categoria -->
+<div class="modal-overlay" id="modalNova">
+  <div class="modal">
+    <div class="modal-titulo">Nova Categoria</div>
+    <div class="form-group">
+      <label>Nome da Categoria</label>
+      <input type="text" id="novaNome" placeholder="Ex: Ferramentas" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Local</label>
+        <input type="text" id="novaLocal" placeholder="Ex: Galpão A" />
+      </div>
+      <div class="form-group">
+        <label>Linha</label>
+        <input type="number" id="novaLinha" placeholder="Ex: 1" />
+      </div>
+    </div>
+    <div class="modal-acoes">
+      <button class="btn btn-outline" onclick="fecharModal('modalNova')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarNovaCategoria()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Editar Categoria -->
+<div class="modal-overlay" id="modalEditar">
+  <div class="modal">
+    <div class="modal-titulo">Editar Categoria</div>
+    <input type="hidden" id="editarId" />
+    <div class="form-group">
+      <label>Nome da Categoria</label>
+      <input type="text" id="editarNome" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Local</label>
+        <input type="text" id="editarLocal" />
+      </div>
+      <div class="form-group">
+        <label>Linha</label>
+        <input type="number" id="editarLinha" />
+      </div>
+    </div>
+    <div class="modal-acoes">
+      <button class="btn btn-outline" onclick="fecharModal('modalEditar')">Cancelar</button>
+      <button class="btn btn-azul" onclick="salvarEdicao()">Atualizar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar Exclusão -->
+<div class="modal-overlay" id="modalExcluir">
+  <div class="modal">
+    <div class="modal-titulo" style="border-top-color: var(--vermelho);">Confirmar Exclusão</div>
+    <p style="font-size:0.88rem; color:var(--texto-leve); margin-bottom:0.5rem;">Deseja realmente excluir a categoria:</p>
+    <p style="font-weight:600; font-size:0.95rem;" id="excluirNomeDisplay"></p>
+    <input type="hidden" id="excluirNome" />
+    <div class="modal-acoes">
+      <button class="btn btn-outline" onclick="fecharModal('modalExcluir')">Cancelar</button>
+      <button class="btn btn-vermelho" onclick="confirmarExclusao()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  const API = 'http://localhost:8080';
+
+  async function carregarCategorias() {
+    document.getElementById('inputBusca').value = '';
+    try {
+      const res = await fetch(`${API}/categoria`);
+      const cats = await res.json();
+      renderizarGrid(cats);
+    } catch {
+      mostrarToast('Erro ao conectar com a API', 'erro');
+    }
+  }
+
+  async function buscarCategoria() {
+    const nome = document.getElementById('inputBusca').value.trim();
+    if (!nome) return carregarCategorias();
+    try {
+      const res = await fetch(`${API}/categoria/buscar?nome=${encodeURIComponent(nome)}`);
+      if (res.ok) {
+        const cat = await res.json();
+        renderizarGrid(cat);
+      } else {
+        renderizarGrid([]);
+        mostrarToast('Categoria não encontrada', 'info');
+      }
+    } catch {
+      mostrarToast('Erro ao buscar', 'erro');
+    }
+  }
+
+  function renderizarGrid(cats) {
+    const grid = document.getElementById('gridCategorias');
+    if (!cats.length) {
+      grid.innerHTML = `<div style="grid-column:1/-1"><div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <div class="empty-state-text">Nenhuma categoria encontrada</div>
+      </div></div>`;
+      return;
+    }
+    grid.innerHTML = cats.map(c => `
+      <div class="card-item">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem;">
+          <div class="card-item-title">${c.nomeCategoria}</div>
+          <span class="badge badge-azul">#${c.id}</span>
+        </div>
+        <div class="card-item-info">📍 Local: ${c.local ?? '—'}</div>
+        <div class="card-item-info">📋 Linha: ${c.linha ?? '—'}</div>
+        <div class="card-item-actions">
+          <button class="btn btn-sm btn-azul" onclick="abrirModalEditar(${c.id}, '${escapar(c.nomeCategoria)}', '${escapar(c.local ?? '')}', ${c.linha ?? 'null'})">Editar</button>
+          <button class="btn btn-sm btn-vermelho" onclick="abrirModalExcluir(${c.id}, '${escapar(c.nomeCategoria)}')">Excluir</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ========== NOVA ==========
+  function abrirModalNova() { abrirModal('modalNova'); }
+
+  async function salvarNovaCategoria() {
+    const nome  = document.getElementById('novaNome').value.trim();
+    const local = document.getElementById('novaLocal').value.trim();
+    const linha = parseInt(document.getElementById('novaLinha').value) || null;
+    if (!nome || !local) return mostrarToast('Nome e local são obrigatórios', 'erro');
+    try {
+      const res = await fetch(`${API}/categoria`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nomeCategoria: nome, local, linha })
+      });
+      if (res.status === 201) {
+        fecharModal('modalNova');
+        mostrarToast('Categoria criada com sucesso', 'sucesso');
+        carregarCategorias();
+        document.getElementById('novaNome').value = '';
+        document.getElementById('novaLocal').value = '';
+        document.getElementById('novaLinha').value = '';
+      } else {
+        const err = await res.json();
+        mostrarToast(err.mensagem ?? 'Erro ao criar categoria', 'erro');
+      }
+    } catch {
+      mostrarToast('Erro na requisição', 'erro');
+    }
+  }
+
+  // ========== EDITAR ==========
+  function abrirModalEditar(id, nome, local, linha) {
+    document.getElementById('editarId').value = id;
+    document.getElementById('editarNome').value = nome;
+    document.getElementById('editarLocal').value = local;
+    document.getElementById('editarLinha').value = linha ?? '';
+    abrirModal('modalEditar');
+  }
+
+  async function salvarEdicao() {
+    const id    = document.getElementById('editarId').value;
+    const nome  = document.getElementById('editarNome').value.trim();
+    const local = document.getElementById('editarLocal').value.trim();
+    const linha = parseInt(document.getElementById('editarLinha').value) || null;
+    if (!nome || !local) return mostrarToast('Nome e local são obrigatórios', 'erro');
+    try {
+      const res = await fetch(`${API}/categoria/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nomeCategoria: nome, local, linha })
+      });
+      if (res.ok) {
+        fecharModal('modalEditar');
+        mostrarToast('Categoria atualizada', 'sucesso');
+        carregarCategorias();
+      } else mostrarToast('Erro ao atualizar', 'erro');
+    } catch {
+      mostrarToast('Erro na requisição', 'erro');
+    }
+  }
+
+  // ========== EXCLUIR ==========
+  function abrirModalExcluir(id, nome) {
+    document.getElementById('excluirNome').value = id;
+    document.getElementById('excluirNomeDisplay').textContent = nome;
+    abrirModal('modalExcluir');
+  }
+
+  async function confirmarExclusao() {
+    const nome = document.getElementById('excluirNome').value;
+    try {
+      const res = await fetch(`${API}/categoria/${encodeURIComponent(nome)}`, { method: 'DELETE' });
+      if (res.status === 204) {
+        fecharModal('modalExcluir');
+        mostrarToast('Categoria excluída', 'sucesso');
+        carregarCategorias();
+      } else mostrarToast('Categoria não encontrada', 'erro');
+    } catch {
+      mostrarToast('Erro na requisição', 'erro');
+    }
+  }
+
+  function abrirModal(id) { document.getElementById(id).classList.add('open'); }
+  function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
+  function escapar(str) { return (str ?? '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+
+  function mostrarToast(msg, tipo = 'info') {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast toast-${tipo}`;
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+  }
+
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+  });
+
+  window.addEventListener('load', carregarCategorias);
+</script>
+</body>
+</html>
